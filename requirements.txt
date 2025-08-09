@@ -1,0 +1,17 @@
+# SQL Formatter App Dependencies
+
+# Core web framework
+Flask==3.0.0
+
+# SQL parsing and formatting
+sqlparse==0.4.4
+
+# CORS support for frontend-backend communication
+Flask-CORS==4.0.0
+
+# Development and testing (optional)
+pytest==7.4.3
+pytest-flask==1.3.0
+
+# For better error handling and logging
+Werkzeug==3.0.1
