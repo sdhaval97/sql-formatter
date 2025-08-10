@@ -272,32 +272,45 @@ class SQLFormatterApp {
             this.showLoading('Formatting SQL...');
             this.setButtonsDisabled(true);
 
+            console.log('Sending format request...');
+            
             const result = await api.formatSQL(sqlText, this.currentSettings);
             
-            this.elements.outputSQL.querySelector('code').textContent = result.formatted_sql;
-            this.lastFormattedSQL = result.formatted_sql;
+            console.log('Format result received:', result);
             
-            // Trigger syntax highlighting
-            if (window.Prism) {
-                Prism.highlightElement(this.elements.outputSQL.querySelector('code'));
+            if (result && result.formatted_sql) {
+                // Simple text update without syntax highlighting for now
+                const codeElement = this.elements.outputSQL.querySelector('code');
+                if (codeElement) {
+                    codeElement.textContent = result.formatted_sql;
+                    this.lastFormattedSQL = result.formatted_sql;
+                }
+                
+                this.updateOutputStats(result);
+                this.showStatus('SQL formatted successfully!', 'success');
+                this.showToast('SQL formatted successfully!', 'success');
+                
+                console.log('Formatting completed successfully');
+            } else {
+                throw new Error('Invalid response format');
             }
-            
-            this.updateOutputStats(result);
-            this.showStatus('SQL formatted successfully!', 'success');
-            this.showToast('SQL formatted successfully!', 'success');
             
         } catch (error) {
             console.error('Format error:', error);
-            this.showStatus(`Format failed: ${error.getUserMessage()}`, 'error');
-            this.showToast(error.getUserMessage(), 'error');
+            this.showStatus(`Format failed: ${error.message}`, 'error');
+            this.showToast(error.message, 'error');
             
             // Show original SQL in output on error
-            this.elements.outputSQL.querySelector('code').textContent = sqlText;
+            const codeElement = this.elements.outputSQL.querySelector('code');
+            if (codeElement) {
+                codeElement.textContent = sqlText;
+            }
             
         } finally {
             this.isFormatting = false;
             this.hideLoading();
             this.setButtonsDisabled(false);
+            console.log('Format operation completed');
         }
     }
 
@@ -361,9 +374,18 @@ class SQLFormatterApp {
             this.lastFormattedSQL = result.minified_sql;
             
             // Trigger syntax highlighting
-            if (window.Prism) {
-                Prism.highlightElement(this.elements.outputSQL.querySelector('code'));
-            }
+            setTimeout(() => {
+                if (window.Prism && window.Prism.highlightElement) {
+                    try {
+                        const codeElement = this.elements.outputSQL.querySelector('code');
+                        if (codeElement) {
+                            Prism.highlightElement(codeElement);
+                        }
+                    } catch (error) {
+                        console.warn('Syntax highlighting failed:', error);
+                    }
+                }
+            }, 10);
             
             this.updateCompressionStats(result);
             this.showStatus('SQL minified successfully!', 'success');
