@@ -1,0 +1,494 @@
+/**
+ * Prism.js Syntax Highlighting Theme for SQL Formatter
+ * Based on VS Code's default light theme with SQL-specific enhancements
+ */
+
+/* ============ BASE STYLES ============ */
+code[class*="language-"],
+pre[class*="language-"] {
+    color: #383a42;
+    background: none;
+    font-family: 'SFMono-Regular', 'Consolas', 'Liberation Mono', 'Menlo', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    direction: ltr;
+    text-align: left;
+    white-space: pre;
+    word-spacing: normal;
+    word-break: normal;
+    tab-size: 4;
+    hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    background: #fafafa;
+    border-radius: 0;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+    padding: 0.1em 0.3em;
+    border-radius: 0.3em;
+    white-space: normal;
+    background: #f5f5f5;
+    border: 1px solid #e1e1e1;
+}
+
+/* ============ TOKEN STYLES ============ */
+
+/* Comments */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+    color: #a0a1a7;
+    font-style: italic;
+}
+
+/* Punctuation */
+.token.punctuation {
+    color: #383a42;
+}
+
+/* Property, tag, boolean, number, constant, symbol, deleted */
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+    color: #e45649;
+}
+
+/* Selector, attr-name, string, char, builtin, inserted */
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+    color: #50a14f;
+}
+
+/* Operator, entity, url, language-css .token.string, style .token.string */
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+    color: #0184bc;
+    background: none;
+}
+
+/* Atrule, attr-value, keyword */
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+    color: #a626a4;
+    font-weight: 600;
+}
+
+/* Function, class-name */
+.token.function,
+.token.class-name {
+    color: #c18401;
+}
+
+/* Regex, important, variable */
+.token.regex,
+.token.important,
+.token.variable {
+    color: #e45649;
+}
+
+.token.important,
+.token.bold {
+    font-weight: bold;
+}
+
+.token.italic {
+    font-style: italic;
+}
+
+/* ============ SQL-SPECIFIC STYLES ============ */
+
+/* SQL Keywords - Enhanced styling */
+.language-sql .token.keyword {
+    color: #0000ff;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* SQL Functions */
+.language-sql .token.function {
+    color: #795e26;
+    font-weight: 600;
+}
+
+/* SQL Strings */
+.language-sql .token.string {
+    color: #008000;
+}
+
+/* SQL Numbers */
+.language-sql .token.number {
+    color: #098658;
+}
+
+/* SQL Comments */
+.language-sql .token.comment {
+    color: #008000;
+    font-style: italic;
+}
+
+/* SQL Operators */
+.language-sql .token.operator {
+    color: #000000;
+    font-weight: 500;
+}
+
+/* SQL Punctuation (parentheses, commas, semicolons) */
+.language-sql .token.punctuation {
+    color: #000000;
+}
+
+/* ============ CUSTOM SQL TOKEN CLASSES ============ */
+
+/* Table names */
+.token.table-name {
+    color: #267f99;
+    font-weight: 500;
+}
+
+/* Column names */
+.token.column-name {
+    color: #001080;
+}
+
+/* Database names */
+.token.database-name {
+    color: #795e26;
+    font-weight: 600;
+}
+
+/* Aliases */
+.token.alias {
+    color: #af00db;
+    font-style: italic;
+}
+
+/* Data types */
+.token.data-type {
+    color: #0000ff;
+    font-weight: 500;
+}
+
+/* ============ ENHANCED READABILITY ============ */
+
+/* Highlight SQL clauses */
+.language-sql .token.keyword.clause {
+    background: rgba(0, 123, 255, 0.1);
+    padding: 0.1em 0.2em;
+    border-radius: 0.2em;
+    margin: 0 0.1em;
+}
+
+/* Highlight function calls */
+.language-sql .token.function-call {
+    background: rgba(121, 94, 38, 0.1);
+    padding: 0.1em 0.2em;
+    border-radius: 0.2em;
+}
+
+/* ============ LINE HIGHLIGHTING ============ */
+
+/* Line highlight */
+.line-highlight {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: inherit 0;
+    margin-top: 1em;
+    background: rgba(153, 122, 102, 0.08);
+    background: linear-gradient(to right, rgba(153, 122, 102, 0.1) 70%, rgba(153, 122, 102, 0));
+    pointer-events: none;
+    line-height: inherit;
+    white-space: pre;
+}
+
+.line-highlight:before,
+.line-highlight[data-end]:after {
+    content: attr(data-start);
+    position: absolute;
+    top: 0.4em;
+    left: 0.6em;
+    min-width: 1em;
+    padding: 0 0.5em;
+    background-color: rgba(153, 122, 102, 0.4);
+    color: #f5f2f0;
+    font: bold 65%/1.5 sans-serif;
+    text-align: center;
+    vertical-align: 0.3em;
+    border-radius: 999px;
+    text-shadow: none;
+    box-shadow: 0 1px white;
+}
+
+.line-highlight[data-end]:after {
+    content: attr(data-end);
+    top: auto;
+    bottom: 0.4em;
+}
+
+/* ============ DARK THEME SUPPORT ============ */
+@media (prefers-color-scheme: dark) {
+    code[class*="language-"],
+    pre[class*="language-"] {
+        color: #d4d4d4;
+        background: none;
+    }
+
+    pre[class*="language-"] {
+        background: #1e1e1e;
+    }
+
+    :not(pre) > code[class*="language-"] {
+        background: #2d2d30;
+        border: 1px solid #3e3e42;
+    }
+
+    /* Dark theme tokens */
+    .token.comment,
+    .token.prolog,
+    .token.doctype,
+    .token.cdata {
+        color: #6a9955;
+    }
+
+    .token.punctuation {
+        color: #d4d4d4;
+    }
+
+    .token.property,
+    .token.tag,
+    .token.boolean,
+    .token.number,
+    .token.constant,
+    .token.symbol,
+    .token.deleted {
+        color: #b5cea8;
+    }
+
+    .token.selector,
+    .token.attr-name,
+    .token.string,
+    .token.char,
+    .token.builtin,
+    .token.inserted {
+        color: #ce9178;
+    }
+
+    .token.operator,
+    .token.entity,
+    .token.url,
+    .language-css .token.string,
+    .style .token.string {
+        color: #d4d4d4;
+    }
+
+    .token.atrule,
+    .token.attr-value,
+    .token.keyword {
+        color: #569cd6;
+    }
+
+    .token.function,
+    .token.class-name {
+        color: #dcdcaa;
+    }
+
+    .token.regex,
+    .token.important,
+    .token.variable {
+        color: #d16969;
+    }
+
+    /* Dark theme SQL specifics */
+    .language-sql .token.keyword {
+        color: #569cd6;
+    }
+
+    .language-sql .token.function {
+        color: #dcdcaa;
+    }
+
+    .language-sql .token.string {
+        color: #ce9178;
+    }
+
+    .language-sql .token.number {
+        color: #b5cea8;
+    }
+
+    .language-sql .token.comment {
+        color: #6a9955;
+    }
+
+    .token.table-name {
+        color: #4ec9b0;
+    }
+
+    .token.column-name {
+        color: #9cdcfe;
+    }
+
+    .token.database-name {
+        color: #dcdcaa;
+    }
+
+    .token.alias {
+        color: #c586c0;
+    }
+
+    .token.data-type {
+        color: #569cd6;
+    }
+}
+
+/* ============ ACCESSIBILITY ============ */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    code[class*="language-"],
+    pre[class*="language-"] {
+        color: #000000;
+        background: #ffffff;
+    }
+
+    .token.keyword {
+        color: #0000ff !important;
+        font-weight: bold !important;
+    }
+
+    .token.string {
+        color: #008000 !important;
+    }
+
+    .token.comment {
+        color: #808080 !important;
+    }
+
+    .token.number {
+        color: #ff0000 !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .line-highlight {
+        transition: none;
+    }
+}
+
+/* ============ CUSTOM ENHANCEMENTS ============ */
+
+/* Error highlighting */
+.token.error {
+    background: rgba(255, 0, 0, 0.1);
+    border-bottom: 2px wavy #ff0000;
+    padding: 0.1em 0;
+}
+
+/* Warning highlighting */
+.token.warning {
+    background: rgba(255, 165, 0, 0.1);
+    border-bottom: 2px wavy #ffa500;
+    padding: 0.1em 0;
+}
+
+/* Success highlighting */
+.token.success {
+    background: rgba(0, 128, 0, 0.1);
+    border-bottom: 2px solid #008000;
+    padding: 0.1em 0;
+}
+
+/* Deprecated features */
+.token.deprecated {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+/* ============ SELECTION STYLES ============ */
+
+code[class*="language-"]::-moz-selection,
+pre[class*="language-"]::-moz-selection,
+code[class*="language-"] ::-moz-selection,
+pre[class*="language-"] ::-moz-selection {
+    background: rgba(0, 123, 255, 0.3);
+}
+
+code[class*="language-"]::selection,
+pre[class*="language-"]::selection,
+code[class*="language-"] ::selection,
+pre[class*="language-"] ::selection {
+    background: rgba(0, 123, 255, 0.3);
+}
+
+/* ============ PRINT STYLES ============ */
+@media print {
+    code[class*="language-"],
+    pre[class*="language-"] {
+        color: #000000;
+        background: #ffffff;
+        text-shadow: none;
+    }
+
+    .token.keyword {
+        font-weight: bold;
+        color: #000000;
+    }
+
+    .token.string {
+        color: #000000;
+        font-style: italic;
+    }
+
+    .token.comment {
+        color: #666666;
+        font-style: italic;
+    }
+
+    /* Remove backgrounds for print */
+    .token.clause,
+    .token.function-call,
+    .token.error,
+    .token.warning,
+    .token.success {
+        background: none !important;
+        border: none !important;
+    }
+}
+
+/* ============ RESPONSIVE DESIGN ============ */
+@media (max-width: 768px) {
+    code[class*="language-"],
+    pre[class*="language-"] {
+        font-size: 12px;
+        line-height: 1.4;
+    }
+}
+
+@media (max-width: 480px) {
+    code[class*="language-"],
+    pre[class*="language-"] {
+        font-size: 11px;
+        line-height: 1.3;
+    }
+}
