@@ -36,14 +36,25 @@ def index():
         return jsonify({'error': 'Frontend not found', 'details': str(e)}), 404
 
 
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    """Serve static files (CSS, JS, etc.)."""
+@app.route('/css/<path:filename>')
+def serve_css(filename):
+    """Serve CSS files."""
     try:
         frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend')
-        return send_from_directory(frontend_dir, filename)
+        css_dir = os.path.join(frontend_dir, 'css')
+        return send_from_directory(css_dir, filename)
     except Exception as e:
-        return jsonify({'error': 'File not found', 'details': str(e)}), 404
+        return jsonify({'error': 'CSS file not found', 'details': str(e)}), 404
+
+@app.route('/js/<path:filename>')
+def serve_js(filename):
+    """Serve JavaScript files."""
+    try:
+        frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend')
+        js_dir = os.path.join(frontend_dir, 'js')
+        return send_from_directory(js_dir, filename)
+    except Exception as e:
+        return jsonify({'error': 'JS file not found', 'details': str(e)}), 404
 
 
 @app.route('/api/format', methods=['POST'])
