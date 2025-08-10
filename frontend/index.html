@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Formatter - Clean & Format Your SQL</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/prism.css">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iIzJkNzJkOSIvPgo8dGV4dCB4PSI2IiB5PSIyMCIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSIgZm9udC1zaXplPSIxMiIgZmlsbD0id2hpdGUiPnNxbDwvdGV4dD4KICA8L3N2Zz4=">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <h1>🔧 SQL Formatter</h1>
+                <span class="tagline">Clean & Format Your SQL Instantly</span>
+            </div>
+            <div class="header-actions">
+                <button id="settingsBtn" class="btn btn-secondary" title="Formatting Options">
+                    ⚙️ Settings
+                </button>
+                <button id="helpBtn" class="btn btn-secondary" title="Help & Shortcuts">
+                    ❓ Help
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <button id="formatBtn" class="btn btn-primary" title="Format SQL (Ctrl+Enter)">
+                    🎨 Format
+                </button>
+                <button id="validateBtn" class="btn btn-secondary" title="Validate SQL">
+                    ✅ Validate
+                </button>
+                <button id="minifyBtn" class="btn btn-secondary" title="Minify SQL">
+                    📦 Minify
+                </button>
+            </div>
+            <div class="toolbar-center">
+                <select id="presetSelect" class="preset-select" title="Formatting Presets">
+                    <option value="">Select Preset...</option>
+                    <option value="standard">Standard</option>
+                    <option value="compact">Compact</option>
+                    <option value="minimal">Minimal</option>
+                    <option value="legacy">Legacy</option>
+                </select>
+            </div>
+            <div class="toolbar-right">
+                <button id="clearBtn" class="btn btn-warning" title="Clear All">
+                    🗑️ Clear
+                </button>
+                <button id="loadFileBtn" class="btn btn-secondary" title="Load SQL File">
+                    📁 Load File
+                </button>
+                <input type="file" id="fileInput" accept=".sql,.txt" style="display: none;">
+            </div>
+        </div>
+
+        <!-- Editor Panels -->
+        <div class="editor-container">
+            <!-- Input Panel -->
+            <div class="panel input-panel">
+                <div class="panel-header">
+                    <h3>📝 Input SQL</h3>
+                    <div class="panel-stats">
+                        <span id="inputStats" class="stats">0 characters</span>
+                    </div>
+                </div>
+                <div class="editor-wrapper">
+                    <textarea 
+                        id="inputSQL" 
+                        class="sql-editor" 
+                        placeholder="Paste your messy SQL here...
+
+Example:
+select u.id,u.name,count(*) as order_count from users u left join orders o on u.id=o.user_id where u.active=1 and o.created_at>'2023-01-01' group by u.id,u.name having count(*)>5 order by order_count desc;"
+                        spellcheck="false"
+                    ></textarea>
+                </div>
+            </div>
+
+            <!-- Resize Handle -->
+            <div class="resize-handle" id="resizeHandle" title="Drag to resize panels"></div>
+
+            <!-- Output Panel -->
+            <div class="panel output-panel">
+                <div class="panel-header">
+                    <h3>✨ Formatted SQL</h3>
+                    <div class="panel-actions">
+                        <span id="outputStats" class="stats">Ready to format</span>
+                        <button id="copyBtn" class="btn btn-success btn-sm" title="Copy to Clipboard">
+                            📋 Copy
+                        </button>
+                        <button id="downloadBtn" class="btn btn-secondary btn-sm" title="Download as .sql file">
+                            💾 Download
+                        </button>
+                    </div>
+                </div>
+                <div class="editor-wrapper">
+                    <pre id="outputSQL" class="sql-output"><code class="language-sql"><!-- Formatted SQL will appear here --></code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="statusMessage" class="status-message">Ready</span>
+            </div>
+            <div class="status-right">
+                <span id="compressionRatio" class="compression-info"></span>
+                <span class="separator">|</span>
+                <span id="apiStatus" class="api-status">🟢 Connected</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ Formatting Options</h3>
+                <button class="modal-close" id="closeSettings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-grid">
+                    <!-- Keyword Case -->
+                    <div class="setting-group">
+                        <label for="keywordCase">Keyword Case:</label>
+                        <select id="keywordCase" class="setting-input">
+                            <option value="upper">UPPERCASE</option>
+                            <option value="lower">lowercase</option>
+                            <option value="capitalize">Capitalize</option>
+                        </select>
+                    </div>
+
+                    <!-- Indentation -->
+                    <div class="setting-group">
+                        <label for="indentWidth">Indentation:</label>
+                        <select id="indentWidth" class="setting-input">
+                            <option value="2">2 spaces</option>
+                            <option value="4">4 spaces</option>
+                            <option value="8">8 spaces</option>
+                        </select>
+                    </div>
+
+                    <!-- Use Tabs -->
+                    <div class="setting-group">
+                        <label for="indentTabs">Use Tabs:</label>
+                        <input type="checkbox" id="indentTabs" class="setting-checkbox">
+                    </div>
+
+                    <!-- Strip Comments -->
+                    <div class="setting-group">
+                        <label for="stripComments">Remove Comments:</label>
+                        <input type="checkbox" id="stripComments" class="setting-checkbox">
+                    </div>
+
+                    <!-- Comma First -->
+                    <div class="setting-group">
+                        <label for="commaFirst">Comma First Style:</label>
+                        <input type="checkbox" id="commaFirst" class="setting-checkbox">
+                    </div>
+
+                    <!-- Line Width -->
+                    <div class="setting-group">
+                        <label for="wrapAfter">Wrap After:</label>
+                        <input type="number" id="wrapAfter" class="setting-input" min="40" max="200" value="79">
+                        <small>characters</small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button id="resetSettings" class="btn btn-warning">Reset Defaults</button>
+                    <button id="saveSettings" class="btn btn-primary">Apply Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>❓ Help & Keyboard Shortcuts</h3>
+                <button class="modal-close" id="closeHelp">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h4>🎯 How to Use</h4>
+                    <ol>
+                        <li>Paste your messy SQL in the left panel</li>
+                        <li>Click "Format" or press <kbd>Ctrl+Enter</kbd></li>
+                        <li>Copy the formatted SQL from the right panel</li>
+                        <li>Adjust settings for your preferred style</li>
+                    </ol>
+                </div>
+
+                <div class="help-section">
+                    <h4>⌨️ Keyboard Shortcuts</h4>
+                    <div class="shortcuts-grid">
+                        <div class="shortcut">
+                            <kbd>Ctrl+Enter</kbd>
+                            <span>Format SQL</span>
+                        </div>
+                        <div class="shortcut">
+                            <kbd>Ctrl+Shift+V</kbd>
+                            <span>Validate SQL</span>
+                        </div>
+                        <div class="shortcut">
+                            <kbd>Ctrl+Shift+C</kbd>
+                            <span>Copy Output</span>
+                        </div>
+                        <div class="shortcut">
+                            <kbd>Ctrl+Shift+L</kbd>
+                            <span>Clear All</span>
+                        </div>
+                        <div class="shortcut">
+                            <kbd>F1</kbd>
+                            <span>Show Help</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h4>🎨 Features</h4>
+                    <ul>
+                        <li><strong>Format:</strong> Clean up messy SQL with proper indentation</li>
+                        <li><strong>Validate:</strong> Check SQL syntax for errors</li>
+                        <li><strong>Minify:</strong> Remove unnecessary whitespace</li>
+                        <li><strong>Presets:</strong> Quick formatting styles</li>
+                        <li><strong>File Support:</strong> Load and save .sql files</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+        <span>Formatting SQL...</span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/prism.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/snippets.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
