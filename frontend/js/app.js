@@ -15,6 +15,41 @@ class SQLFormatterApp {
     }
 
     /**
+     * Ensure proper line wrapping for long SQL lines
+     */
+    ensureLineWrapping(sql, maxLineLength = 80) {
+        const lines = sql.split('\n');
+        const wrappedLines = [];
+        
+        for (const line of lines) {
+            if (line.length <= maxLineLength) {
+                wrappedLines.push(line);
+            } else {
+                // Split long lines at appropriate points
+                const words = line.split(' ');
+                let currentLine = '';
+                
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).length <= maxLineLength) {
+                        currentLine += (currentLine ? ' ' : '') + word;
+                    } else {
+                        if (currentLine) {
+                            wrappedLines.push(currentLine);
+                        }
+                        currentLine = word;
+                    }
+                }
+                
+                if (currentLine) {
+                    wrappedLines.push(currentLine);
+                }
+            }
+        }
+        
+        return wrappedLines.join('\n');
+    }
+
+    /**
      * Initialize the application
      */
     async init() {
@@ -279,11 +314,17 @@ class SQLFormatterApp {
             console.log('Format result received:', result);
             
             if (result && result.formatted_sql) {
+                // Process the formatted SQL to ensure proper line wrapping
+                let formattedSQL = result.formatted_sql;
+                
+                // Force line breaks for very long lines (over 80 characters)
+                formattedSQL = this.ensureLineWrapping(formattedSQL);
+                
                 // Simple text update without syntax highlighting for now
                 const codeElement = this.elements.outputSQL.querySelector('code');
                 if (codeElement) {
-                    codeElement.textContent = result.formatted_sql;
-                    this.lastFormattedSQL = result.formatted_sql;
+                    codeElement.textContent = formattedSQL;
+                    this.lastFormattedSQL = formattedSQL;
                 }
                 
                 this.updateOutputStats(result);
@@ -328,30 +369,163 @@ class SQLFormatterApp {
         try {
             this.showLoading('Validating SQL...');
             
+            console.log('🔍 Starting validation for SQL:', sqlText);
+            
             const validation = await api.validateSQL(sqlText);
+            
+            console.log('📊 Validation result received:', validation);
+            console.log('📊 Is valid:', validation.is_valid);
+            console.log('📊 Errors:', validation.errors);
+            console.log('📊 Error details:', validation.error_details);
+            
+            // Clear any previous error highlighting
+            this.clearValidationHighlights();
             
             if (validation.is_valid) {
                 this.showStatus('✅ SQL is valid!', 'success');
-                this.showToast('SQL is valid!', 'success');
+                this.showToast('✅ SQL is valid!', 'success');
             } else {
-                const errors = validation.errors.join(', ');
-                this.showStatus(`❌ SQL validation failed: ${errors}`, 'error');
-                this.showToast(`Validation failed: ${errors}`, 'error');
+                const errorCount = validation.errors.length;
+                const errorSummary = errorCount === 1 ? '1 error found' : `${errorCount} errors found`;
+                
+                this.showStatus(`❌ SQL validation failed: ${errorSummary}`, 'error');
+                
+                // Show a concise error notification
+                const primaryError = validation.errors[0];
+                // Shorten the error message for the toast
+                let shortError = primaryError;
+                if (shortError.length > 60) {
+                    shortError = shortError.substring(0, 57) + '...';
+                }
+                this.showToast(`❌ ${shortError}`, 'error');
+                
+                // Show detailed errors in validation panel
+                if (validation.error_details && validation.error_details.length > 0) {
+                    this.highlightValidationErrors(validation.error_details);
+                }
+                
+                // Log detailed errors for debugging
+                console.log('Validation errors:', validation.errors);
+                console.log('Error details:', validation.error_details);
             }
             
             if (validation.warnings && validation.warnings.length > 0) {
-                const warnings = validation.warnings.join(', ');
-                this.showToast(`Warnings: ${warnings}`, 'warning');
+                const warningText = validation.warnings.slice(0, 2).join(', ');
+                this.showToast(`Warnings: ${warningText}`, 'warning');
+                console.log('Validation warnings:', validation.warnings);
             }
             
         } catch (error) {
             console.error('Validation error:', error);
-            this.showStatus(`Validation failed: ${error.getUserMessage()}`, 'error');
-            this.showToast(error.getUserMessage(), 'error');
+            this.showStatus(`❌ Validation failed: ${error.message}`, 'error');
+            this.showToast(`Validation failed: ${error.message}`, 'error');
             
         } finally {
             this.hideLoading();
         }
+    }
+
+    /**
+     * Highlight validation errors in the input textarea
+     */
+    highlightValidationErrors(errorDetails) {
+        const textarea = this.elements.inputSQL;
+        const sqlText = textarea.value;
+        
+        // Create a visual indicator for errors
+        this.showValidationErrors(errorDetails, sqlText);
+        
+        // Focus on the first error position
+        if (errorDetails.length > 0) {
+            const firstError = errorDetails[0];
+            if (firstError.position !== undefined) {
+                // Try to position cursor near the error
+                const lines = sqlText.split('\n');
+                let charPos = 0;
+                
+                // Simple approximation - this could be enhanced
+                if (firstError.position < sqlText.length) {
+                    textarea.focus();
+                    textarea.setSelectionRange(firstError.position, firstError.position);
+                }
+            }
+        }
+    }
+
+    /**
+     * Show validation errors in a detailed view
+     */
+    showValidationErrors(errorDetails, sqlText) {
+        // Create or update an error display panel
+        let errorPanel = document.getElementById('validationErrorPanel');
+        
+        if (!errorPanel) {
+            errorPanel = document.createElement('div');
+            errorPanel.id = 'validationErrorPanel';
+            errorPanel.className = 'validation-error-panel';
+            
+            // Insert after the input panel
+            const inputPanel = document.querySelector('.input-panel');
+            inputPanel.appendChild(errorPanel);
+        }
+        
+        // Build error list HTML
+        let errorHTML = '<div class="error-header">❌ Validation Errors:</div>';
+        errorHTML += '<div class="error-list">';
+        
+        errorDetails.forEach((error, index) => {
+            errorHTML += `
+                <div class="error-item" data-position="${error.position || 0}">
+                    <div class="error-type">${error.type || 'syntax_error'}</div>
+                    <div class="error-message">${error.message}</div>
+                    ${error.token ? `<div class="error-token">Near: "${error.token}"</div>` : ''}
+                </div>
+            `;
+        });
+        
+        errorHTML += '</div>';
+        errorHTML += '<div class="error-footer"><button onclick="window.sqlFormatterApp.clearValidationHighlights()">Clear Errors</button></div>';
+        
+        errorPanel.innerHTML = errorHTML;
+        errorPanel.style.display = 'block';
+        
+        // Add click handlers to jump to error positions
+        errorPanel.querySelectorAll('.error-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const position = parseInt(item.dataset.position) || 0;
+                this.jumpToPosition(position);
+            });
+        });
+    }
+
+    /**
+     * Clear validation error highlights
+     */
+    clearValidationHighlights() {
+        const errorPanel = document.getElementById('validationErrorPanel');
+        if (errorPanel) {
+            errorPanel.style.display = 'none';
+        }
+        
+        // Remove any text highlighting
+        this.elements.inputSQL.style.backgroundColor = '';
+    }
+
+    /**
+     * Jump to a specific position in the input textarea
+     */
+    jumpToPosition(position) {
+        const textarea = this.elements.inputSQL;
+        textarea.focus();
+        
+        // Set cursor position
+        textarea.setSelectionRange(position, position + 1);
+        
+        // Scroll to make the position visible
+        const lines = textarea.value.substring(0, position).split('\n');
+        const lineNumber = lines.length;
+        const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 20;
+        textarea.scrollTop = (lineNumber - 1) * lineHeight - textarea.clientHeight / 2;
     }
 
     /**
@@ -667,9 +841,12 @@ class SQLFormatterApp {
         this.elements.toast.className = `toast ${type}`;
         this.elements.toast.classList.add('show');
         
+        // Longer duration for error messages
+        const duration = type === 'error' ? 5000 : 3000;
+        
         setTimeout(() => {
             this.elements.toast.classList.remove('show');
-        }, 3000);
+        }, duration);
     }
 
     /**
