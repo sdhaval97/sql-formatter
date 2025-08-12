@@ -539,39 +539,61 @@ class SQLFormatterApp {
             return;
         }
 
+        if (this.isFormatting) {
+            this.showToast('Operation in progress...', 'info');
+            return;
+        }
+
         try {
+            this.isFormatting = true;
             this.showLoading('Minifying SQL...');
+            this.setButtonsDisabled(true);
+
+            console.log('🗜️ Starting minify for SQL:', sqlText.substring(0, 50) + '...');
             
             const result = await api.minifySQL(sqlText);
             
-            this.elements.outputSQL.querySelector('code').textContent = result.minified_sql;
-            this.lastFormattedSQL = result.minified_sql;
+            console.log('🗜️ Minify result received:', result);
             
-            // Trigger syntax highlighting
-            setTimeout(() => {
-                if (window.Prism && window.Prism.highlightElement) {
-                    try {
-                        const codeElement = this.elements.outputSQL.querySelector('code');
-                        if (codeElement) {
-                            Prism.highlightElement(codeElement);
-                        }
-                    } catch (error) {
-                        console.warn('Syntax highlighting failed:', error);
-                    }
+            if (result && result.minified_sql) {
+                // Process the minified SQL to ensure proper line wrapping if needed
+                let minifiedSQL = result.minified_sql;
+                
+                // Simple text update without syntax highlighting for now
+                const codeElement = this.elements.outputSQL.querySelector('code');
+                if (codeElement) {
+                    codeElement.textContent = minifiedSQL;
+                    this.lastFormattedSQL = minifiedSQL;
                 }
-            }, 10);
-            
-            this.updateCompressionStats(result);
-            this.showStatus('SQL minified successfully!', 'success');
-            this.showToast(`SQL minified! ${result.compression_ratio}% smaller`, 'success');
+                
+                // Update compression statistics
+                this.updateCompressionStats(result);
+                this.showStatus('SQL minified successfully!', 'success');
+                
+                const compressionText = result.compression_ratio ? ` ${result.compression_ratio}% smaller` : '';
+                this.showToast(`🗜️ SQL minified!${compressionText}`, 'success');
+                
+                console.log('🗜️ Minify completed successfully');
+            } else {
+                throw new Error('Invalid minify response format');
+            }
             
         } catch (error) {
             console.error('Minify error:', error);
-            this.showStatus(`Minify failed: ${error.getUserMessage()}`, 'error');
-            this.showToast(error.getUserMessage(), 'error');
+            this.showStatus(`❌ Minify failed: ${error.message}`, 'error');
+            this.showToast(`Minify failed: ${error.message}`, 'error');
+            
+            // Show original SQL in output on error
+            const codeElement = this.elements.outputSQL.querySelector('code');
+            if (codeElement) {
+                codeElement.textContent = sqlText;
+            }
             
         } finally {
+            this.isFormatting = false;
             this.hideLoading();
+            this.setButtonsDisabled(false);
+            console.log('🗜️ Minify operation completed');
         }
     }
 
@@ -818,8 +840,20 @@ class SQLFormatterApp {
      * Update compression statistics
      */
     updateCompressionStats(result) {
-        this.elements.compressionRatio.textContent = `${result.compression_ratio}% smaller`;
-        this.elements.outputStats.textContent = `${result.minified_length} characters (compressed)`;
+        try {
+            if (result.compression_ratio !== undefined) {
+                this.elements.compressionRatio.textContent = `${result.compression_ratio}% smaller`;
+            }
+            
+            if (result.minified_length !== undefined) {
+                this.elements.outputStats.textContent = `${result.minified_length} characters (compressed)`;
+            } else if (result.formatted_length !== undefined) {
+                this.elements.outputStats.textContent = `${result.formatted_length} characters`;
+            }
+        } catch (error) {
+            console.warn('Error updating compression stats:', error);
+            // Don't throw - this is not critical
+        }
     }
 
     /**
